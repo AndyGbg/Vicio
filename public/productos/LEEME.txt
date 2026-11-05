@@ -1,0 +1,41 @@
+FOTOS DE LOS PRODUCTOS DEL VICIO
+================================
+
+Pon aquí las fotos con EXACTAMENTE estos nombres (en minúsculas, .jpg):
+
+HAMBURGUESAS
+  hamburguesa-1.jpg   (Bs 30)
+  hamburguesa-2.jpg   (Bs 30)
+  hamburguesa-3.jpg   (Bs 45)
+  hamburguesa-4.jpg   (Bs 45)
+
+PIPOCAS DE POLLO
+  pipocas.jpg
+
+ALITAS
+  alitas-6.jpg
+  alitas-12.jpg
+
+REFRESCOS
+  coca-cola.jpg
+  sprite.jpg
+  fanta.jpg
+  mini.jpg            (las minis en vidrio)
+
+BEBIDAS
+  limonada.jpg
+  mocochinchi.jpg
+
+FOTO DE PORTADA (va en la carpeta public/, no aquí)
+  public/portada.jpg  (ya hay una de prueba)
+
+Recomendaciones:
+- Productos: fotos CUADRADAS, mínimo 800 x 800 px.
+- Portada: foto HORIZONTAL, idealmente 1600 x 1200 px o más.
+- Fondo limpio, buena luz, la comida centrada.
+- Si una foto no está, la app muestra un espacio gris (no se rompe).
+- Si agregas un producto nuevo, agrégalo en src/data/menu.ts con su "imagen".
+
+QR DE COBRO (va en la carpeta public/, no aquí)
+  public/qr-pago.png  -> la imagen del QR del banco del Vicio para recibir pagos.
+  Se muestra en la pantalla "Pagar con QR" y el cliente la puede descargar.

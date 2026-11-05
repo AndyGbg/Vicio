@@ -1,18 +1,158 @@
 @import "tailwindcss";
 
+/*
+  Sistema de color por ROLES (no por nombre de color).
+  Si quieres cambiar un color de toda la app, cámbialo aquí.
+*/
+:root {
+  color-scheme: light;
+  --fondo: #ffffff;
+  --superficie: #f5f5f4; /* gris muy claro: fotos vacías, campos de texto */
+  --elevada: #ffffff;
+  --borde: #ebebea;
+  --texto: #18181b;
+  --suave: #5f5f66;
+  --acento: #e5432d; /* rojo tomate: botones y acciones */
+  --acento-texto: #c9361f; /* rojo para texto (contraste AA sobre blanco) */
+  --acento-suave: #fdecea;
+  --sombra-acento: 229 67 45;
+
+  /* Curvas de animación (Emil Kowalski) */
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-drawer: cubic-bezier(0.32, 0.72, 0, 1);
+}
+
 @theme inline {
-  --color-carbon: #0f0d0b;
-  --color-brasa: #1a1612;
-  --color-borde: #2c261f;
-  --color-crema: #f5ecdf;
-  --color-humo: #a39886;
-  --color-mostaza: #ffb627;
-  --color-ketchup: #e63a1e;
-  --font-sans: var(--font-inter);
+  --color-fondo: var(--fondo);
+  --color-superficie: var(--superficie);
+  --color-elevada: var(--elevada);
+  --color-borde: var(--borde);
+  --color-texto: var(--texto);
+  --color-suave: var(--suave);
+  --color-acento: var(--acento);
+  --color-acento-texto: var(--acento-texto);
+  --color-acento-suave: var(--acento-suave);
+  --font-sans: var(--font-geist);
   --font-display: var(--font-display);
 }
 
+/* Animaciones: se usan con clases como "animate-subir" */
+@theme {
+  --animate-entrar: entrar 700ms var(--ease-out) both;
+  --animate-subir: subir 420ms var(--ease-drawer) both;
+  --animate-bajar: bajar 200ms var(--ease-out) both;
+  --animate-aparecer: aparecer 300ms var(--ease-out) both;
+  --animate-desaparecer: desaparecer 200ms var(--ease-out) both;
+  --animate-asomar: asomar 300ms var(--ease-out) both;
+  --animate-pulso: pulso 320ms var(--ease-out);
+  --animate-pop: pop 450ms var(--ease-out) both;
+
+  @keyframes entrar {
+    from { opacity: 0; transform: translateY(14px); filter: blur(6px); }
+    to { opacity: 1; transform: translateY(0); filter: blur(0); }
+  }
+  @keyframes subir {
+    from { transform: translateY(100%); }
+    to { transform: translateY(0); }
+  }
+  @keyframes bajar {
+    from { transform: translateY(0); }
+    to { transform: translateY(100%); }
+  }
+  @keyframes aparecer {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+  @keyframes desaparecer {
+    from { opacity: 1; }
+    to { opacity: 0; }
+  }
+  @keyframes asomar {
+    from { opacity: 0; transform: translateY(16px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes pulso {
+    0% { transform: scale(1); }
+    40% { transform: scale(1.22); }
+    100% { transform: scale(1); }
+  }
+  @keyframes pop {
+    from { opacity: 0; transform: scale(0.9); }
+    to { opacity: 1; transform: scale(1); }
+  }
+}
+
+/* Todo lo que se puede tocar se "hunde" un poquito al presionarlo */
+@utility presionable {
+  transition: transform 160ms var(--ease-out);
+  &:active {
+    transform: scale(0.97);
+  }
+}
+
+html {
+  scroll-behavior: smooth;
+  scrollbar-color: var(--borde) transparent;
+}
+
+/* Detrás de la app: se ve negro cuando un panel se abre y la página se encoge (estilo iPhone) */
+html.panel-abierto,
+html.panel-abierto body {
+  background: #000;
+}
+
 body {
-  background: var(--color-carbon);
-  color: var(--color-crema);
+  background: var(--fondo);
+  color: var(--texto);
+  -webkit-tap-highlight-color: transparent;
+  caret-color: var(--acento);
+}
+
+::selection {
+  background: var(--acento);
+  color: #fff;
+}
+
+@layer base {
+  :focus-visible {
+    outline: 2px solid var(--acento);
+    outline-offset: 2px;
+  }
+}
+
+.sin-scrollbar {
+  scrollbar-width: none;
+}
+.sin-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+/* La página detrás de un panel abierto se encoge y redondea, como en iOS */
+.fondo-app {
+  transition: transform 420ms var(--ease-drawer), border-radius 420ms var(--ease-drawer), filter 420ms var(--ease-drawer);
+}
+.fondo-app[data-atras="true"] {
+  transform: scale(0.93) translateY(10px);
+  border-radius: 28px;
+  overflow: clip;
+  filter: brightness(0.92);
+}
+
+/* Botones de la barra: se hunden al tocar y rebotan suave al soltar */
+@utility presionable-barra {
+  transition: transform 320ms cubic-bezier(0.34, 1.25, 0.64, 1);
+  &:active {
+    transform: scale(0.86);
+    transition-duration: 120ms;
+  }
+}
+
+/* Reducir movimiento: sin desplazamientos, pero se mantienen los fundidos */
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  .animate-entrar, .animate-subir, .animate-asomar, .animate-pop { animation-name: aparecer; }
+  .animate-bajar { animation-name: desaparecer; }
+  .animate-pulso { animation: none; }
+  .presionable:active, .presionable-barra:active { transform: none; }
+  .fondo-app[data-atras="true"] { transform: none; border-radius: 0; }
 }
