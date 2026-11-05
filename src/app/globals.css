@@ -1,0 +1,18 @@
+@import "tailwindcss";
+
+@theme inline {
+  --color-carbon: #0f0d0b;
+  --color-brasa: #1a1612;
+  --color-borde: #2c261f;
+  --color-crema: #f5ecdf;
+  --color-humo: #a39886;
+  --color-mostaza: #ffb627;
+  --color-ketchup: #e63a1e;
+  --font-sans: var(--font-inter);
+  --font-display: var(--font-display);
+}
+
+body {
+  background: var(--color-carbon);
+  color: var(--color-crema);
+}
