@@ -28,7 +28,9 @@ const DURACION_FONDO = 420;
 
 type Enviado = { numero: string; total: number; metodo: "qr" | "caja" };
 
-export default function MenuMesa({ mesa }: { mesa: string }) {
+// mesa = número que trae el QR de la mesa (/mesa/7).
+// Si entraron sin QR (al inicio), pueden ver el menú pero no enviar pedidos.
+export default function MenuMesa({ mesa }: { mesa: string | null }) {
   const [carrito, setCarrito] = useState<ItemCarrito[]>([]);
   const [productoAbierto, setProductoAbierto] = useState<Producto | null>(null);
   const [carritoAbierto, setCarritoAbierto] = useState(false);
@@ -131,7 +133,7 @@ export default function MenuMesa({ mesa }: { mesa: string }) {
   const cerrarCarrito = useCallback(() => setCarritoAbierto(false), []);
   const cerrarBuscar = useCallback(() => setBuscarAbierto(false), []);
 
-  if (enviado) {
+  if (enviado && mesa) {
     return (
       <PedidoEnviado
         mesa={mesa}
@@ -147,7 +149,7 @@ export default function MenuMesa({ mesa }: { mesa: string }) {
     );
   }
 
-  if (pagando) {
+  if (pagando && mesa) {
     return (
       <Pago
         mesa={mesa}
@@ -169,6 +171,12 @@ export default function MenuMesa({ mesa }: { mesa: string }) {
       >
         <div className="mx-auto max-w-xl pb-44">
           <Encabezado mesa={mesa} onBuscar={() => abrirPanel(() => setBuscarAbierto(true))} />
+
+          {!mesa && (
+            <p className="mx-5 mb-3 rounded-2xl bg-superficie px-4 py-3 text-sm text-suave">
+              Estás viendo el menú. <b className="text-texto">Para pedir, escanea el QR de tu mesa.</b>
+            </p>
+          )}
 
           <div id="portada">
             <Portada />

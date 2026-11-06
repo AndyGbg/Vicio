@@ -39,3 +39,6 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# la plantilla de ejemplo si se sube (no tiene claves reales)
+!.env.local.example

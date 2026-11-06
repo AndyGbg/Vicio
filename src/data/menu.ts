@@ -7,6 +7,9 @@
 // Si una foto no está, la app muestra un espacio gris en su lugar.
 // Más adelante todo esto vendrá de la base de datos (Supabase).
 
+// Cuántas mesas tiene el local (se usará para generar e imprimir un QR por mesa)
+export const totalMesas = 10;
+
 export const categorias = ["Hamburguesas", "Pipocas de pollo", "Alitas", "Refrescos", "Bebidas"] as const;
 export type Categoria = (typeof categorias)[number];
 

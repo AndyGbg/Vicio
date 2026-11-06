@@ -1,6 +1,8 @@
 "use client";
 
 import { precioUnitario, type ItemCarrito } from "@/data/menu";
+import { HugeiconsIcon } from "../Icono";
+import { QrCodeIcon } from "@hugeicons/core-free-icons";
 import Sheet from "./Sheet";
 import Contador from "./Contador";
 import Foto from "./Foto";
@@ -15,7 +17,7 @@ export default function CarritoSheet({
   onCerrando,
   onEnviar,
 }: {
-  mesa: string;
+  mesa: string | null; // viene SIEMPRE del QR de la mesa (null si entraron sin escanear)
   items: ItemCarrito[];
   notaGeneral: string;
   onNotaGeneral: (s: string) => void;
@@ -32,7 +34,16 @@ export default function CarritoSheet({
         <>
           <div className="px-5 pb-6">
             <h2 className="font-display text-2xl font-bold tracking-tight">Tu pedido</h2>
-            <p className="mt-1 inline-block rounded-full bg-superficie px-3 py-1 text-sm font-semibold">Para la mesa {mesa}</p>
+            {mesa ? (
+              <p className="mt-1 inline-block rounded-full bg-superficie px-3 py-1 text-sm font-semibold">Para la mesa {mesa}</p>
+            ) : (
+              <div className="mt-4 flex gap-3 rounded-2xl bg-acento-suave p-4 text-acento-texto">
+                <HugeiconsIcon icon={QrCodeIcon} size={24} strokeWidth={1.8} className="shrink-0" />
+                <p className="text-sm">
+                  <b>Para enviar tu pedido, escanea el QR de tu mesa.</b> Así sabemos a qué mesa llevarlo.
+                </p>
+              </div>
+            )}
 
             <ul className="mt-4 divide-y divide-borde">
               {items.map((i) => {
@@ -91,9 +102,10 @@ export default function CarritoSheet({
           <div className="sticky bottom-0 border-t border-borde bg-elevada/95 px-5 py-4 backdrop-blur">
             <button
               onClick={() => cerrar(onEnviar)}
-              className="presionable w-full rounded-full bg-acento py-4 text-lg font-semibold text-white shadow-[0_8px_24px_rgb(var(--sombra-acento)/0.32)]"
+              disabled={!mesa}
+              className="presionable w-full rounded-full bg-acento py-4 text-lg font-semibold text-white shadow-[0_8px_24px_rgb(var(--sombra-acento)/0.32)] disabled:opacity-50 disabled:shadow-none"
             >
-              Continuar al pago
+              {mesa ? "Continuar al pago" : "Escanea el QR de tu mesa"}
             </button>
           </div>
         </>
