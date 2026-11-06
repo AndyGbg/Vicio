@@ -9,6 +9,8 @@ import Foto from "./Foto";
 
 export default function CarritoSheet({
   mesa,
+  enviando,
+  error,
   items,
   notaGeneral,
   onNotaGeneral,
@@ -17,7 +19,9 @@ export default function CarritoSheet({
   onCerrando,
   onEnviar,
 }: {
-  mesa: string | null; // viene SIEMPRE del QR de la mesa (null si entraron sin escanear)
+  mesa: string | null; // viene SIEMPRE del QR de la mesa (null si entraron sin escanear o el QR no es válido)
+  enviando: boolean;
+  error: string;
   items: ItemCarrito[];
   notaGeneral: string;
   onNotaGeneral: (s: string) => void;
@@ -30,7 +34,7 @@ export default function CarritoSheet({
 
   return (
     <Sheet onCerrar={onCerrar} onCerrando={onCerrando} etiqueta="Tu pedido">
-      {(cerrar) => (
+      {() => (
         <>
           <div className="px-5 pb-6">
             <h2 className="font-display text-2xl font-bold tracking-tight">Tu pedido</h2>
@@ -96,16 +100,23 @@ export default function CarritoSheet({
               <span className="text-suave">Total</span>
               <span className="font-display text-3xl font-bold tabular-nums">Bs {total}</span>
             </div>
-            <p className="mt-1 text-sm text-suave">En el siguiente paso pagas con QR desde tu celular.</p>
+            <p className="mt-1 text-sm text-suave">
+              Al confirmar verás el QR de Yasta. Tienes 10 minutos para pagar; cuando caja vea tu pago, tu pedido pasa a cocina.
+            </p>
           </div>
 
           <div className="sticky bottom-0 border-t border-borde bg-elevada/95 px-5 py-4 backdrop-blur">
+            {error && (
+              <p role="alert" className="mb-3 text-center text-sm font-medium text-acento-texto">
+                {error}
+              </p>
+            )}
             <button
-              onClick={() => cerrar(onEnviar)}
-              disabled={!mesa}
+              onClick={onEnviar}
+              disabled={!mesa || enviando}
               className="presionable w-full rounded-full bg-acento py-4 text-lg font-semibold text-white shadow-[0_8px_24px_rgb(var(--sombra-acento)/0.32)] disabled:opacity-50 disabled:shadow-none"
             >
-              {mesa ? "Continuar al pago" : "Escanea el QR de tu mesa"}
+              {!mesa ? "Escanea el QR de tu mesa" : enviando ? "Enviando pedido..." : "Confirmar y pagar"}
             </button>
           </div>
         </>

@@ -19,25 +19,45 @@ import ProductoSheet from "./mesa/ProductoSheet";
 import CarritoSheet from "./mesa/CarritoSheet";
 import BuscarSheet from "./mesa/BuscarSheet";
 import Pago from "./mesa/Pago";
-import PedidoEnviado from "./mesa/PedidoEnviado";
+import { crearPedido, validarMesa } from "@/lib/pedidos";
+import { supabaseConfigurado } from "@/lib/supabase";
 import BarraInferior from "./mesa/BarraInferior";
 import Foto from "./mesa/Foto";
 
 const idSeccion = (c: Categoria) => `cat-${c.normalize("NFD").replace(/[^a-zA-Z]/g, "").toLowerCase()}`;
 const DURACION_FONDO = 420;
 
-type Enviado = { numero: string; total: number; metodo: "qr" | "caja" };
+// Guarda el pedido en curso en el celular, para no perderlo si se recarga la página
+const claveGuardado = (mesa: string) => `vicio-pedido-mesa-${mesa}`;
+function leerGuardado(mesa: string | null) {
+  if (!mesa) return null;
+  try {
+    return localStorage.getItem(claveGuardado(mesa));
+  } catch {
+    return null;
+  }
+}
+function guardar(mesa: string, id: string | null) {
+  try {
+    if (id) localStorage.setItem(claveGuardado(mesa), id);
+    else localStorage.removeItem(claveGuardado(mesa));
+  } catch {
+    /* sin almacenamiento: no pasa nada */
+  }
+}
 
-// mesa = número que trae el QR de la mesa (/mesa/7).
-// Si entraron sin QR (al inicio), pueden ver el menú pero no enviar pedidos.
-export default function MenuMesa({ mesa }: { mesa: string | null }) {
+// mesa y codigo vienen del QR de la mesa (/mesa/7?c=k8f2x).
+// Sin QR (al inicio) se puede ver el menú pero no enviar pedidos.
+export default function MenuMesa({ mesa, codigo = null }: { mesa: string | null; codigo?: string | null }) {
   const [carrito, setCarrito] = useState<ItemCarrito[]>([]);
   const [productoAbierto, setProductoAbierto] = useState<Producto | null>(null);
   const [carritoAbierto, setCarritoAbierto] = useState(false);
   const [buscarAbierto, setBuscarAbierto] = useState(false);
   const [notaGeneral, setNotaGeneral] = useState("");
-  const [pagando, setPagando] = useState(false);
-  const [enviado, setEnviado] = useState<Enviado | null>(null);
+  const [pedidoId, setPedidoId] = useState<string | null>(null);
+  const [enviando, setEnviando] = useState(false);
+  const [errorEnvio, setErrorEnvio] = useState("");
+  const [qrValido, setQrValido] = useState<boolean | null>(null);
   const [activa, setActiva] = useState<Categoria | null>(null);
   // Efecto iPhone: la página de atrás se encoge mientras hay un panel abierto
   const [fondoAtras, setFondoAtras] = useState(false);
@@ -47,7 +67,24 @@ export default function MenuMesa({ mesa }: { mesa: string | null }) {
   const total = carrito.reduce((s, i) => s + precioUnitario(i) * i.cantidad, 0);
   const hayPanel = !!productoAbierto || carritoAbierto || buscarAbierto;
   const atras = hayPanel && fondoAtras;
-  const enMenu = !pagando && !enviado;
+  const enMenu = !pedidoId;
+  const puedePedir = !!mesa && qrValido === true;
+
+  // Si había un pedido en curso en este celular, lo retomamos
+  useEffect(() => {
+    const guardado = leerGuardado(mesa);
+    if (guardado) setPedidoId(guardado);
+  }, [mesa]);
+
+  // Revisa que el QR de la mesa sea válido (número + código secreto)
+  useEffect(() => {
+    if (!mesa) return;
+    if (!codigo || !supabaseConfigurado) {
+      setQrValido(false);
+      return;
+    }
+    validarMesa(mesa, codigo).then(setQrValido);
+  }, [mesa, codigo]);
 
   // Abre un panel y encoge el fondo desde el centro de lo que se está viendo
   const abrirPanel = (abrir: () => void) => {
@@ -114,17 +151,30 @@ export default function MenuMesa({ mesa }: { mesa: string | null }) {
     if (nuevo.length === 0) setCarritoAbierto(false);
   };
 
-  const irAPago = () => {
-    setCarritoAbierto(false);
-    setPagando(true);
-    window.scrollTo({ top: 0 });
+  // Crea el pedido de verdad en Supabase y pasa a la pantalla de pago
+  const irAPago = async () => {
+    if (!mesa || !codigo || enviando) return;
+    setEnviando(true);
+    setErrorEnvio("");
+    try {
+      const creado = await crearPedido(mesa, codigo, carrito, notaGeneral);
+      guardar(mesa, creado.pedido_id);
+      setPedidoId(creado.pedido_id);
+      setCarritoAbierto(false);
+      setFondoAtras(false);
+      setCarrito([]);
+      setNotaGeneral("");
+      window.scrollTo({ top: 0 });
+    } catch (e) {
+      setErrorEnvio(e instanceof Error ? e.message : "No se pudo enviar el pedido.");
+    } finally {
+      setEnviando(false);
+    }
   };
 
-  const terminar = (metodo: Enviado["metodo"]) => {
-    // Con la base de datos: aquí guardaremos el pedido (y el método de pago) en Supabase
-    const numero = String(Math.floor(100 + Math.random() * 900));
-    setEnviado({ numero, total, metodo });
-    setPagando(false);
+  const nuevoPedido = () => {
+    if (mesa) guardar(mesa, null);
+    setPedidoId(null);
     window.scrollTo({ top: 0 });
   };
 
@@ -133,33 +183,8 @@ export default function MenuMesa({ mesa }: { mesa: string | null }) {
   const cerrarCarrito = useCallback(() => setCarritoAbierto(false), []);
   const cerrarBuscar = useCallback(() => setBuscarAbierto(false), []);
 
-  if (enviado && mesa) {
-    return (
-      <PedidoEnviado
-        mesa={mesa}
-        numero={enviado.numero}
-        total={enviado.total}
-        metodo={enviado.metodo}
-        onVolver={() => {
-          setEnviado(null);
-          setCarrito([]);
-          setNotaGeneral("");
-        }}
-      />
-    );
-  }
-
-  if (pagando && mesa) {
-    return (
-      <Pago
-        mesa={mesa}
-        items={carrito}
-        total={total}
-        onVolver={() => setPagando(false)}
-        onPagado={() => terminar("qr")}
-        onPagarEnCaja={() => terminar("caja")}
-      />
-    );
+  if (pedidoId && mesa) {
+    return <Pago pedidoId={pedidoId} mesa={mesa} onNuevoPedido={nuevoPedido} />;
   }
 
   return (
@@ -175,6 +200,11 @@ export default function MenuMesa({ mesa }: { mesa: string | null }) {
           {!mesa && (
             <p className="mx-5 mb-3 rounded-2xl bg-superficie px-4 py-3 text-sm text-suave">
               Estás viendo el menú. <b className="text-texto">Para pedir, escanea el QR de tu mesa.</b>
+            </p>
+          )}
+          {mesa && qrValido === false && (
+            <p className="mx-5 mb-3 rounded-2xl bg-acento-suave px-4 py-3 text-sm text-acento-texto">
+              <b>Este QR no es válido o está desactualizado.</b> Escanea de nuevo el QR de tu mesa o pide ayuda en caja.
             </p>
           )}
 
@@ -285,7 +315,9 @@ export default function MenuMesa({ mesa }: { mesa: string | null }) {
 
       {carritoAbierto && (
         <CarritoSheet
-          mesa={mesa}
+          mesa={puedePedir ? mesa : null}
+          enviando={enviando}
+          error={errorEnvio}
           items={carrito}
           notaGeneral={notaGeneral}
           onNotaGeneral={setNotaGeneral}

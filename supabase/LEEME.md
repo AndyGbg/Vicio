@@ -45,3 +45,21 @@ insert into perfiles (id, nombre, rol)
 | Cambiar estado | No | Preparando / Listo | Todo |
 | Ver códigos de mesas | No | No | Sí |
 | Editar menú y precios | No | No | Sí |
+
+## 4. Pago con Yasta y pedidos en vivo (cambio 02)
+1. **SQL Editor** > **New query** > pega TODO `supabase/02-pago-yasta.sql` > **Run**.
+2. Guarda la imagen del QR de Yasta del Vicio como `public/qr-pago.png`.
+3. Inicia sesión como caja > pestaña **Mesas** > **Abrir como cliente** en cualquier mesa
+   (el link lleva el código secreto, por ejemplo `/mesa/7?c=k8f2x`).
+4. Pide algo y toca **Confirmar y pagar**. En otra pestaña, en `/admin`, toca **Pago recibido**.
+5. Inicia sesión como cocina (otra ventana o en modo incógnito) en `/cocina`: el pedido aparece al instante.
+
+### Flujo
+| Paso | Quién | Estado |
+|---|---|---|
+| Confirma su pedido y ve el QR (10 min) | Cliente | Esperando pago |
+| Ve el pago en Yasta y toca "Pago recibido" | Caja | En cocina |
+| "Empezar" | Cocina | Preparando |
+| "Listo" | Cocina | Listo |
+| "Entregado en la mesa" | Caja | Entregado |
+| Nadie confirmó en 10 min | Automático | Cancelado (caja puede reactivar) |

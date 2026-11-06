@@ -49,8 +49,8 @@ export default function PanelPersonal({
   }
 
   return (
-    <div className="min-h-[100svh] bg-superficie">
-      <header className="sticky top-0 z-30 border-b border-borde bg-fondo/90 backdrop-blur-md">
+    <div className="min-h-[100svh] bg-superficie print:bg-white">
+      <header className="sticky top-0 z-30 border-b border-borde bg-fondo/90 backdrop-blur-md print:hidden">
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-5">
           <div className="flex items-baseline gap-3">
             <span className="font-display text-xl font-extrabold tracking-tight">
